@@ -8,6 +8,7 @@
 #include <unistd.h>
 #include <linux/magic.h>
 #include <errno.h>
+#include "debug.h"
 
 #define MAX_PATH_LEN 1024
 
@@ -62,7 +63,7 @@ stack_pop(char *path, DIR **ppdir)
 }
 
 int
-main(int argc, char *argv[])
+scan_directory(char *home_dir)
 {
     DIR            *pdir;
     DIR            *pndir;
@@ -72,7 +73,7 @@ main(int argc, char *argv[])
     char           current_dir[MAX_PATH_LEN] = {0};
     char           current_file[MAX_PATH_LEN] = {0};
 
-    pdir = opendir(".");
+    pdir = opendir(home_dir);
 
     if (NULL == pdir)
     {
@@ -98,7 +99,7 @@ main(int argc, char *argv[])
 
             if (lstat(current_file, &fprop) < 0)
             {
-                fprintf(stderr, "lstat failed for %s (%d)\n", current_file, errno);
+                fprintf(stderr, "lstat failed for %s %s (%d)\n", current_file, strerror(errno), errno);
                 exit(1);
             }
     
@@ -110,7 +111,7 @@ main(int argc, char *argv[])
             {
                 if (statfs(current_file, &fsprop) < 0)
                 {
-                    fprintf(stderr, "statfs failed for %s (%d)\n", current_file, errno);
+                    fprintf(stderr, "statfs failed for %s %s (%d)\n", current_file, strerror(errno), errno);
                     exit(1);
                 }
 
@@ -147,4 +148,44 @@ loop_break:
     }
 
     closedir(pdir);
+}
+
+int
+main(int argc, char *argv[])
+{
+    int      c;
+    int  debug;
+    char *root;
+
+    while ((c = getopt (argc, argv, "d:")) != -1)
+    {
+        switch(c)
+        {
+            case 'd':
+                debug = atoi(optarg);
+                break;
+            case '?':
+                if (optopt == 'c')
+                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                else if (isprint(optopt))
+                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                else
+                    fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+                return 1;
+            default:
+                exit(1);
+        }
+    }
+
+    if (root = getenv("HOME"))
+    {
+        chdir(root);
+        scan_directory(root);
+    }
+    else
+    {
+        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Environmental variable HOME not configured");
+    }
+
+    return 0;
 }
