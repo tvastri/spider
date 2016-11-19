@@ -1,7 +1,12 @@
-CFLAGS = -g
+#CFLAGS = -g
+LDFLAGS = -lcurl -lssl -lcrypto
 
-spider-client: main.o scan_dir.o debug.o net_utils.o file_utils.o
-	gcc main.o scan_dir.o debug.o net_utils.o file_utils.o -lcurl -o spider-client 
+SOURCES = debug.c file_utils.c net_utils.c scan_dir.c main.c
+
+OBJECTS = $(SOURCES:.c=.o)
+
+spider-client: $(OBJECTS)
+	gcc $(OBJECTS) $(LDFLAGS) -o spider-client 
 
 clean:
-	@rm *.o spider-client
+	@rm -f $(OBJECTS) spider-client
