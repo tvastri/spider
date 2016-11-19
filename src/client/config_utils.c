@@ -2,7 +2,7 @@
 #include <string.h>
 #include <glib-2.0/glib.h>
 #include "global.h"
-#include "config.h"
+#include "config_utils.h"
 
 tStatus
 get_server_ip(char *config_file, char *ipaddr)
