@@ -34,3 +34,6 @@
 
 # Executable
 spider-client
+
+# Dependency files
+*.d
