@@ -1,5 +1,5 @@
-#ifndef _CONFIG_H
-#define _CONFIG_H
+#ifndef _GLOBAL_H
+#define _GLOBAL_H
 
 #define CACHE_DIR       ".spider"
 #define TIMESTAMP_FILE  CACHE_DIR "/" "last_timestamp"
