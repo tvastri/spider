@@ -5,8 +5,10 @@
 #include <unistd.h>
 #include <time.h>
 #include <errno.h>
-#include "config.h"
+#include "global.h"
 #include "debug.h"
+#include "file_utils.h"
+#include "net_utils.h"
 #include "scan_dir.h"
 
 #define TS_BUF  16
@@ -56,10 +58,11 @@ main(int argc, char *argv[])
     current_timestamp = time(&current_timestamp);
 
     /* Get the last time stamp */
-    if (ts = fopen(TIMESTAMP_FILE, "r+"))
+    if (ts = fopen(TIMESTAMP_FILE, "r"))
     {
         fgets(last_timestamp_buf, TS_BUF, ts);
         last_timestamp = atoi(last_timestamp_buf);
+        fclose(ts);
     }
     else
     {
@@ -70,11 +73,23 @@ main(int argc, char *argv[])
 
     //scan_dir(root, last_timestamp);
 
-    /* store the timestamp */
-    fseek(ts, 0L, SEEK_SET);
-    fprintf(ts, "%u", current_timestamp);
+    /* Create timestamp directory if not present */
+    if (OK != create_cache_dir_if_missing(CACHE_DIR))
+    {
+        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not create cache directory");
+        exit(1);
+    }
 
-    fclose(ts);
+    /* store the timestamp */
+    if (ts = fopen(TIMESTAMP_FILE, "w"))
+    {
+        fprintf(ts, "%u", current_timestamp);
+        fclose(ts);
+    }
+    else
+    {
+        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not write timestamp file");
+    }
 
     return 0;
 }
