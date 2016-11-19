@@ -4,6 +4,7 @@
 #define CACHE_DIR       ".spider"
 #define TIMESTAMP_FILE  CACHE_DIR "/" "last_timestamp"
 #define CONFIG_FILE     "/etc/spider.cfg"
+#define IP_ADDR_LEN     16
 
 typedef u_int8_t tBoolean;
 #if (1 != TRUE)

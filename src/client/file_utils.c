@@ -26,7 +26,7 @@ create_cache_dir_if_missing(char *cache_dir)
         }
     }
 
-    if (S_IFDIR != buf.st_mode)
+    if (!S_ISDIR(buf.st_mode))
     {
         fprintf(stderr, "%s: %s is not a directory\n", __FUNCTION__, cache_dir);
         return ERROR;

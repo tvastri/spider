@@ -22,6 +22,7 @@ main(int argc, char *argv[])
     time_t              last_timestamp;
     time_t           current_timestamp;
     char    last_timestamp_buf[TS_BUF];
+    char           ipaddr[IP_ADDR_LEN] = {0};
 
     while ((c = getopt (argc, argv, "d:")) != -1)
     {
@@ -53,6 +54,14 @@ main(int argc, char *argv[])
         debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Environmental variable HOME not configured");
         exit(1);
     }
+
+    /* Get the server IP address */
+    if (ERROR == get_server_ip(CONFIG_FILE, ipaddr))
+    {
+        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not read server from %s", CONFIG_FILE);
+        exit(1);
+    }
+    printf("server ipaddr = %s\n", ipaddr);
 
     /* Get the current timestamp */
     current_timestamp = time(&current_timestamp);
