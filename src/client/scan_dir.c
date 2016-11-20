@@ -29,7 +29,7 @@ stack_push(char *path, DIR *pdir)
     n = malloc(sizeof(t_stack_node));   
     if (!n)
     {
-        fprintf(stderr, "malloc failed (%d)\n", errno);
+        debug_log(LOG_ERR, "malloc failed. errno = %s", strerror(errno));
     }
     memset(n, 0, sizeof(*n));
 
@@ -77,7 +77,7 @@ scan_dir(char *root_dir, time_t last_timestamp)
 
     if (NULL == pdir)
     {
-        fprintf(stderr, "opendir failed (%d)\n", errno);
+        debug_log(LOG_CRIT, "opendir failed. errno = %s", strerror(errno));
         exit(1);
     }
 
@@ -99,7 +99,7 @@ scan_dir(char *root_dir, time_t last_timestamp)
 
             if (lstat(current_file, &fprop) < 0)
             {
-                fprintf(stderr, "lstat failed for %s %s (%d)\n", current_file, strerror(errno), errno);
+                debug_log(LOG_ERR, "lstat failed for %s. errno = %s", current_file, strerror(errno));
                 exit(1);
             }
     
@@ -111,13 +111,12 @@ scan_dir(char *root_dir, time_t last_timestamp)
             {
                 if (statfs(current_file, &fsprop) < 0)
                 {
-                    fprintf(stderr, "statfs failed for %s %s (%d)\n", current_file, strerror(errno), errno);
+                    debug_log(LOG_ERR, "statfs failed for %s. errno = %s", current_file, strerror(errno));
                     exit(1);
                 }
 
                 if (fsprop.f_type == NFS_SUPER_MAGIC)
                 {
-                    printf("%s is a NFS mount\n", entry->d_name);
                     continue;
                 }
 
@@ -126,7 +125,7 @@ scan_dir(char *root_dir, time_t last_timestamp)
 
                 if (NULL == pndir)
                 {
-                    fprintf(stderr, "opendir failed for %s (%d)\n", current_file, errno);
+                    debug_log(LOG_ERR, "opendir failed for %s. errno = %s", current_file, strerror(errno));
                     exit(1);
                 }
                 stack_push(current_dir, pdir);

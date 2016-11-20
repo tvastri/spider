@@ -12,11 +12,31 @@
 #include "scan_dir.h"
 
 #define TS_BUF  16
+
+static void
+spider_init(tBoolean daemonize)
+{
+    debug_log_init(daemonize);
+
+    debug_log(LOG_NOTICE, "Starting client.");
+
+    if (daemonize)
+    {
+        daemon(0, 0);       
+    }
+}
+
+static void
+spider_end()
+{
+    debug_log_close();
+}
+
 int
 main(int argc, char *argv[])
 {
     int                              c;
-    int                          debug;
+    tBoolean           daemonize=FALSE;
     char                         *root;
     FILE                           *ts;
     time_t              last_timestamp;
@@ -24,25 +44,28 @@ main(int argc, char *argv[])
     char    last_timestamp_buf[TS_BUF];
     char           ipaddr[IP_ADDR_LEN] = {0};
 
-    while ((c = getopt (argc, argv, "d:")) != -1)
+    while ((c = getopt (argc, argv, "d")) != -1)
     {
         switch(c)
         {
             case 'd':
-                debug = atoi(optarg);
+                daemonize = TRUE;
+                spider_init(daemonize);
                 break;
             case '?':
                 if (optopt == 'c')
-                    fprintf(stderr, "Option -%c requires an argument.\n", optopt);
+                    debug_log(LOG_CRIT, "Option -%c requires an argument.", optopt);
                 else if (isprint(optopt))
-                    fprintf(stderr, "Unknown option `-%c'.\n", optopt);
+                    debug_log(LOG_CRIT, "Unknown option `-%c'.", optopt);
                 else
-                    fprintf(stderr, "Unknown option character `\\x%x'.\n", optopt);
+                    debug_log(LOG_CRIT, "Unknown option character `\\x%x'.", optopt);
                 return 1;
             default:
                 exit(1);
         }
     }
+
+    spider_init(daemonize);
 
     /* chdir to HOME directory */
     if (root = getenv("HOME"))
@@ -51,14 +74,14 @@ main(int argc, char *argv[])
     }
     else
     {
-        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Environmental variable HOME not configured");
+        debug_log(LOG_CRIT, "Environmental variable HOME not configured.");
         exit(1);
     }
 
     /* Get the server IP address */
     if (ERROR == get_server_ip(CONFIG_FILE, ipaddr))
     {
-        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not read server from %s", CONFIG_FILE);
+        debug_log(LOG_CRIT, "Could not read server from %s.", CONFIG_FILE);
         exit(1);
     }
     printf("server ipaddr = %s\n", ipaddr);
@@ -85,7 +108,7 @@ main(int argc, char *argv[])
     /* Create timestamp directory if not present */
     if (OK != create_cache_dir_if_missing(CACHE_DIR))
     {
-        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not create cache directory");
+        debug_log(LOG_CRIT, "Could not create cache directory.");
         exit(1);
     }
 
@@ -97,8 +120,10 @@ main(int argc, char *argv[])
     }
     else
     {
-        debug_log(DEBUG_LEVEL_1, DEBUG_LEVEL_SYSLOG, "Could not write timestamp file");
+        debug_log(LOG_ERR, "Could not write timestamp file.");
     }
+
+    spider_end();
 
     return 0;
 }
