@@ -83,9 +83,9 @@ do_fscan(char *root_dir)
 
     stack_push(".", pdir);
 
-    while(pdir = stack_pop(current_dir, &pdir))
+    while((pdir = stack_pop(current_dir, &pdir)))
     {
-        while(entry = readdir(pdir))
+        while((entry = readdir(pdir)))
         {
             if (!strcmp(entry->d_name, ".") || !strcmp(entry->d_name, ".."))
             {
@@ -147,6 +147,7 @@ loop_break:
     }
 
     closedir(pdir);
+    return OK;
 }
 
 tStatus

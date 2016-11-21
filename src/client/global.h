@@ -19,9 +19,13 @@ typedef u_int8_t tBoolean;
 #define FALSE   0
 #endif
 
-
 typedef u_int8_t tStatus;
 #define OK      1
 #define ERROR   0
 
+typedef struct
+{
+    u_int32_t  fscan_interval;
+    u_int32_t  pscan_interval;
+} tServerConfig;
 #endif /* _CONFIG_H */

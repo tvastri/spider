@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <ctype.h>
 #include <sys/types.h>
 #include <unistd.h>
 #include <time.h>
@@ -10,6 +11,7 @@
 #include "file_utils.h"
 #include "net_utils.h"
 #include "scan_dir.h"
+#include "config_utils.h"
 
 
 static void
@@ -79,6 +81,9 @@ main(int argc, char *argv[])
 
     spider_init(daemonize);
 
+    get_config_from_server(NULL);
+
+    exit(1);
     /* Get the server IP address */
     if (ERROR == get_server_ip(CONFIG_FILE, ipaddr))
     {
@@ -88,7 +93,7 @@ main(int argc, char *argv[])
     printf("server ipaddr = %s\n", ipaddr);
 
     /* chdir to HOME directory */
-    if (root = getenv("HOME"))
+    if ((root = getenv("HOME")))
     {
         chdir(root);
     }

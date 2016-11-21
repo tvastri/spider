@@ -1,6 +1,7 @@
 package main
 
 import (
+        "fmt"
         "os"
         "io"
         "bufio"
@@ -49,10 +50,31 @@ func stat(w http.ResponseWriter, r *http.Request) {
     }
 }
 
+func conf(w http.ResponseWriter, r *http.Request) {
+    r.ParseForm()
+
+    fmt.Printf("Hello World\n");
+
+    file, err := os.Open("/etc/spider/server.cfg")
+    if (err != nil) {
+        http.Error(w, "File open failed", 500)
+        return
+    }
+
+    w.Header().Set("Content-Type", "application/octet-stream")
+
+    _,err = io.Copy(w, bufio.NewReader(file))
+    if (err != nil) {
+        http.Error(w, "File write failed", 500)
+        return
+    }
+}
+
 func main() {
         http.HandleFunc("/get/", get);
         http.HandleFunc("/put/", put)
         http.HandleFunc("/stat/", stat)
+        http.HandleFunc("/conf/", conf)
         http.ListenAndServe(":8000", nil)
 }
 

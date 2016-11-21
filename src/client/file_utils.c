@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
@@ -82,9 +83,9 @@ store_last_fscan_timestamp(time_t timestamp)
 {
     FILE                           *ts;
 
-    if (ts = fopen(TIMESTAMP_FILE, "w"))
+    if ((ts = fopen(TIMESTAMP_FILE, "w")))
     {
-        fprintf(ts, "%u", timestamp);
+        fprintf(ts, "%lu", timestamp);
         fclose(ts);
     }
     else
@@ -101,7 +102,7 @@ get_last_fscan_timestamp(time_t *timestamp)
     FILE                           *ts;
     char    last_timestamp_buf[TS_BUF];
 
-    if (ts = fopen(TIMESTAMP_FILE, "r"))
+    if ((ts = fopen(TIMESTAMP_FILE, "r")))
     {
         fgets(last_timestamp_buf, TS_BUF, ts);
         *timestamp = atoi(last_timestamp_buf);

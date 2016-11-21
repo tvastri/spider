@@ -1,6 +1,6 @@
 CC = gcc
 RM = rm
-CFLAGS = -I/usr/include/glib-2.0/ -I/usr/lib64/glib-2.0/include
+CFLAGS = -Wall -Werror -I/usr/include/glib-2.0/ -I/usr/lib64/glib-2.0/include
 LDFLAGS = -lcurl -lssl -lcrypto -lglib-2.0
 DEPDIR = deps
 
