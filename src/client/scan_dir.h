@@ -3,6 +3,7 @@
 
 #include <time.h>
 
-int scan_dir(char *root_dir, time_t last_timestamp);
+tStatus do_fscan(char *root_dir);
+tStatus do_pscan(char *root_dir, time_t last_timestamp);
 
 #endif /* _SCAN_DIR_H */

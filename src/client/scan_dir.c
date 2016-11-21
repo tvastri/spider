@@ -62,8 +62,8 @@ stack_pop(char *path, DIR **ppdir)
     return pdir;
 }
 
-int
-scan_dir(char *root_dir, time_t last_timestamp)
+tStatus
+do_fscan(char *root_dir)
 {
     DIR            *pdir;
     DIR            *pndir;
@@ -147,4 +147,10 @@ loop_break:
     }
 
     closedir(pdir);
+}
+
+tStatus
+do_pscan(char *root_dir, time_t last_timestamp)
+{
+    return OK;
 }

@@ -8,6 +8,8 @@
 #include "debug.h"
 #include "file_utils.h"
 
+#define TS_BUF  16
+
 tStatus
 create_cache_dir_if_missing(char *cache_dir)
 {
@@ -70,6 +72,45 @@ calculate_sha1_hash(char *infile)
     if (1 == ret)
     {
         SHA1(file_content, fbuf.st_size , hash);
+    }
+
+    return OK;
+}
+
+tStatus
+store_last_fscan_timestamp(time_t timestamp)
+{
+    FILE                           *ts;
+
+    if (ts = fopen(TIMESTAMP_FILE, "w"))
+    {
+        fprintf(ts, "%u", timestamp);
+        fclose(ts);
+    }
+    else
+    {
+        debug_log(LOG_ERR, "Could not write timestamp file.");
+    }
+
+    return OK;
+}
+
+tStatus
+get_last_fscan_timestamp(time_t *timestamp)
+{
+    FILE                           *ts;
+    char    last_timestamp_buf[TS_BUF];
+
+    if (ts = fopen(TIMESTAMP_FILE, "r"))
+    {
+        fgets(last_timestamp_buf, TS_BUF, ts);
+        *timestamp = atoi(last_timestamp_buf);
+        fclose(ts);
+    }
+    else
+    {
+         *timestamp = 0;
+         return ERROR;
     }
 
     return OK;
