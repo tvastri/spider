@@ -18,6 +18,8 @@ static void
 spider_init(tBoolean daemonize)
 {
 
+    config_init();
+
     if (daemonize)
     {
         daemon(0, 0);       
@@ -51,11 +53,10 @@ main(int argc, char *argv[])
     tBoolean           daemonize=FALSE;
     char                         *root;
     time_t                         now;
-    time_t              fscan_interval;
-    time_t              pscan_interval;
+    //time_t              pscan_interval;
     time_t             next_fscan_time = 0;
-    time_t             next_pscan_time = 0;
-    time_t        last_fscan_timestamp;
+    //time_t             next_pscan_time = 0;
+    //time_t        last_fscan_timestamp;
     char           ipaddr[IP_ADDR_LEN] = {0};
 
     while ((c = getopt (argc, argv, "d")) != -1)
@@ -81,15 +82,13 @@ main(int argc, char *argv[])
 
     spider_init(daemonize);
 
-    get_config_from_server(NULL);
-
-    exit(1);
-    /* Get the server IP address */
-    if (ERROR == get_server_ip(CONFIG_FILE, ipaddr))
+    if (OK != decode_client_config(CONFIG_FILE))
     {
-        debug_log(LOG_CRIT, "Could not read server from %s.", CONFIG_FILE);
+        debug_log(LOG_CRIT, "Could not read %s. Exiting.", CONFIG_FILE);
         exit(1);
     }
+ 
+
     printf("server ipaddr = %s\n", ipaddr);
 
     /* chdir to HOME directory */
@@ -106,16 +105,29 @@ main(int argc, char *argv[])
     // The main loop
     while(1)
     {
-        sleep(600);
-        now = time(&now);
+        sleep(LOOP_INTERVAL);
 
+        if (OK != download_config_from_server(get_server_config()))
+        {
+            /* Maybe the server is down */
+            debug_log(LOG_NOTICE, "Server config download failed.");
+            continue;
+        }
+
+        now = time(&now);
+        printf("now = %lu, next_fscan_time = %lu, get_fscan_interval = %lu\n", now, next_fscan_time, get_fscan_interval());
+        
         if (now > next_fscan_time)
         {
+            debug_log(LOG_NOTICE, "Starting full scan.");
             do_fscan(root);
             debug_log(LOG_NOTICE, "Full scan completed in %u seconds.", time(NULL) - now);
-            next_fscan_time = time(NULL) + (fscan_interval*9)/10 + rand()%(fscan_interval/10);
+            next_fscan_time = time(NULL) + (get_fscan_interval()/10)*9 + rand()%(get_fscan_interval()/10);
+            printf("now = %lu, next_fscan_time = %lu\n", now, next_fscan_time);
             store_last_fscan_timestamp(now);
         }
+        sleep(600);
+#if 0
         else if (now > next_pscan_time)
         {
             if (ERROR == get_last_fscan_timestamp(&last_fscan_timestamp))
@@ -131,6 +143,7 @@ main(int argc, char *argv[])
         {
             // Do nothing
         }
+#endif
     }
 
     spider_end();

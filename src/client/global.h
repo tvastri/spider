@@ -3,8 +3,10 @@
 
 #define CACHE_DIR       ".spider"
 #define TIMESTAMP_FILE  CACHE_DIR "/" "last_timestamp"
-#define CONFIG_FILE     "/etc/spider.cfg"
-#define IP_ADDR_LEN     16
+#define CONFIG_FILE     "/etc/spider/client.cfg"
+#define IP_ADDR_LEN       16
+#define MAX_NAME_LEN     256
+#define LOOP_INTERVAL    10
 
 typedef u_int8_t tBoolean;
 #if (1 != TRUE)
@@ -23,9 +25,4 @@ typedef u_int8_t tStatus;
 #define OK      1
 #define ERROR   0
 
-typedef struct
-{
-    u_int32_t  fscan_interval;
-    u_int32_t  pscan_interval;
-} tServerConfig;
 #endif /* _CONFIG_H */

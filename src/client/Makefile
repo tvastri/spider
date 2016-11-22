@@ -1,10 +1,7 @@
 CC = gcc
 RM = rm
-CFLAGS = -Wall -Werror -I/usr/include/glib-2.0/ -I/usr/lib64/glib-2.0/include
+CFLAGS = -g -Wall -Werror -I/usr/include/glib-2.0/ -I/usr/lib64/glib-2.0/include
 LDFLAGS = -lcurl -lssl -lcrypto -lglib-2.0
-DEPDIR = deps
-
-$(shell mkdir -p $(DEPDIR) >/dev/null)
 
 SOURCES = config_utils.c     \
           debug.c            \
@@ -24,8 +21,8 @@ spider-client: $(OBJECTS)
 %.d: %.c
 	$(CC) $(CFLAGS) -MM $< -o $@
 
-#-include $(patsubst %,$(DEPDIR)/%.d,$(basename $(SOURCES)))
--include $(DEPS)
-
 clean:
 	@$(RM) -f $(OBJECTS) $(DEPS) spider-client
+
+-include $(DEPS)
+
