@@ -62,7 +62,7 @@ download_config_from_server(tServerConfig *t)
         curl_easy_setopt(curl, CURLOPT_PROXY, "");
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, store_server_config); 
         curl_easy_setopt(curl, CURLOPT_WRITEDATA, t); 
-        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/conf/");
+        curl_easy_setopt(curl, CURLOPT_URL, "http://127.0.0.1:8000/reg/");
         res = curl_easy_perform(curl);
         if (res != CURLE_OK)
         {

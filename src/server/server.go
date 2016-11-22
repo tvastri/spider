@@ -10,16 +10,22 @@ import (
 
 func get(w http.ResponseWriter, r *http.Request) {
     var ok error
+    var arr []byte
+    var path string
 
     r.ParseForm()
 
-    _,ok = os.Lstat(r.Form.Get("file"))
+    arr = []byte(r.Form.Get("file"))
+
+    path = string(arr[0]) + "/" + string(arr[1]) + "/" + string(arr[2]) + "/" + string(arr[3])
+
+    _,ok = os.Lstat(path + "/" + r.Form.Get("file"))
     if (nil != ok) {
         http.Error(w, "Not Found", 404)
         return
     }
 
-    file, err := os.Open(r.Form.Get("file"))
+    file, err := os.Open(path + "/" + r.Form.Get("file"))
     if (err != nil) {
         http.Error(w, "File open failed", 500)
         return
@@ -34,7 +40,17 @@ func get(w http.ResponseWriter, r *http.Request) {
 }
 
 func put(w http.ResponseWriter, r *http.Request) {
+    var ok error
+    var path="hello"
+
     r.ParseForm()
+
+    ok = os.MkdirAll(path, 0700)
+    if (nil != ok) {
+        http.Error(w, "Directory creation failed", 500)
+        return
+    }
+
 }
 
 func stat(w http.ResponseWriter, r *http.Request) {
@@ -50,7 +66,7 @@ func stat(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func conf(w http.ResponseWriter, r *http.Request) {
+func reg(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()
 
     fmt.Printf("Hello World\n");
@@ -71,10 +87,14 @@ func conf(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
-        http.HandleFunc("/get/", get);
-        http.HandleFunc("/put/", put)
-        http.HandleFunc("/stat/", stat)
-        http.HandleFunc("/conf/", conf)
-        http.ListenAndServe(":8000", nil)
+
+    /* Change directory */
+    os.Chdir("/disk2/BACKUP")
+
+    http.HandleFunc("/get/", get);
+    http.HandleFunc("/put/", put)
+    http.HandleFunc("/stat/", stat)
+    http.HandleFunc("/reg/", reg)
+    http.ListenAndServe(":8000", nil)
 }
 

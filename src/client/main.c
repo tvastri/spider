@@ -105,7 +105,7 @@ main(int argc, char *argv[])
     // The main loop
     while(1)
     {
-        sleep(LOOP_INTERVAL);
+        //sleep(LOOP_INTERVAL);
 
         if (OK != download_config_from_server(get_server_config()))
         {
@@ -116,7 +116,7 @@ main(int argc, char *argv[])
 
         now = time(&now);
         printf("now = %lu, next_fscan_time = %lu, get_fscan_interval = %lu\n", now, next_fscan_time, get_fscan_interval());
-        
+        exit(1);
         if (now > next_fscan_time)
         {
             debug_log(LOG_NOTICE, "Starting full scan.");
