@@ -41,15 +41,46 @@ func get(w http.ResponseWriter, r *http.Request) {
 
 func put(w http.ResponseWriter, r *http.Request) {
     var ok error
-    var path="hello"
+    var arr []byte
+    var path string
+
 
     r.ParseForm()
 
-    ok = os.MkdirAll(path, 0700)
-    if (nil != ok) {
-        http.Error(w, "Directory creation failed", 500)
+    if (r.Method == "GET") {
+        http.Error(w, "Wrong Method", 500)
         return
+    } else {
+        r.ParseMultipartForm(32 << 20)
+        file, handler, err := r.FormFile("uploadfile")
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+
+        fmt.Printf("Filename = %s\n", handler.Filename)
+        arr = []byte(handler.Filename)
+        path = "./" + string(arr[0]) + "/" + string(arr[1]) + "/" + string(arr[2]) + "/" + string(arr[3]) + "/"
+
+        fmt.Printf("PATH = %s\n", path);
+
+        ok = os.MkdirAll(path, 0700)
+        if (nil != ok) {
+            http.Error(w, "Directory creation failed", 500)
+            return
+        }
+
+        defer file.Close()
+        fmt.Fprintf(w, "%v", handler.Header)
+        f, err := os.OpenFile(path+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
+        if err != nil {
+            fmt.Println(err)
+            return
+        }
+           defer f.Close()
+           io.Copy(f, file)
     }
+  
 
 }
 
