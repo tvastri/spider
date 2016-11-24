@@ -18,6 +18,75 @@
 tStatus
 change_user_and_root(char *uid)
 {
+    struct passwd      pwd;
+    struct passwd    *ppwd;
+    char         *buf=NULL;
+    char        *root=NULL;
+    int           buflen=0;
+    int           status=0;
+
+    if ( 0 > (buflen = sysconf(_SC_GETPW_R_SIZE_MAX)))
+    {
+        debug_log(LOG_CRIT, "sysconf failed.");
+        return ERROR;
+    }
+
+    buf = malloc(buflen);
+    if (NULL == buf)
+    {
+        debug_log(LOG_CRIT, "malloc failed.");
+        return ERROR;
+    }
+
+    status = getpwnam_r(uid, &pwd, buf, buflen, &ppwd);
+    if (0 > status)
+    {
+        debug_log(LOG_CRIT, "getpwnam_r failed.");
+        return ERROR;
+    }
+
+    if (0 == getuid())
+    {
+        /* Change uid, gid and root if runnign as root */
+        if (0 > chroot(pwd.pw_dir))
+        {
+            debug_log(LOG_CRIT, "chroot failed.");
+            return ERROR;
+        }
+
+        if (getgid() != pwd.pw_gid)
+        {
+            if (setgid(pwd.pw_gid))
+            {
+                debug_log(LOG_CRIT, "setgid failed.");
+                return ERROR;
+            }
+        }
+
+        if (getuid() != pwd.pw_uid)
+        {
+            if (setuid(pwd.pw_uid))
+            {
+                debug_log(LOG_CRIT, "setuid failed.");
+                return ERROR;
+            }
+        }
+    }
+    else
+    {
+        if (!(root = getenv("HOME")))
+        {
+            debug_log(LOG_CRIT, "getenv failed.");
+            return ERROR;
+        }
+        
+        if (0 > chdir(root))
+        {
+            debug_log(LOG_CRIT, "chdir failed.");
+            return ERROR;
+        }
+    }
+
     return OK;
 }
 
@@ -89,7 +158,6 @@ main(int argc, char *argv[])
     time_t                   next_fscan_time = 0;
     //time_t                 next_pscan_time = 0;
     //time_t                last_fscan_timestamp;
-    char               ipaddr[IP_ADDR_LEN] = {0};
 
     while(1)
     {
@@ -140,18 +208,9 @@ main(int argc, char *argv[])
     }
 
 
-    printf("server ipaddr = %s\n", ipaddr);
+    printf("server ipaddr = %s\n", get_client_config()->ipaddr);
 
-    /* chdir to HOME directory */
-    if ((root = getenv("HOME")))
-    {
-        chdir(root);
-    }
-    else
-    {
-        debug_log(LOG_CRIT, "Environmental variable HOME not configured.");
-        exit(1);
-    }
+    exit(1);
 
     // The main loop
     while(1)
