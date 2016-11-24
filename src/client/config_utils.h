@@ -22,12 +22,14 @@ typedef struct
 } tClientConfig;
 
 void config_init();
-tStatus decode_client_config(char *config_file);
+tStatus decode_client_config(char *config_file, tClientConfig *clientConfig);
 tStatus decode_server_config();
 
+tClientConfig* get_client_config();
 tServerConfig* get_server_config();
 tStatus get_server_ip(char *config_file, char *ipaddr);
 time_t get_fscan_interval();
 time_t get_pscan_interval();
+void print_client_config();
 
 #endif

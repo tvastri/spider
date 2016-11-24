@@ -5,6 +5,7 @@
 #include <ctype.h>
 #include <unistd.h>
 #include <sys/types.h>
+#include <pwd.h>
 #include <time.h>
 #include <errno.h>
 #include "global.h"
@@ -14,21 +15,32 @@
 #include "scan_dir.h"
 #include "config_utils.h"
 
+tStatus
+change_user_and_root(char *uid)
+{
+    return OK;
+}
 
 static tStatus
 spider_init(int daemonize, int create_scratchpad)
 {
-
     config_init();
 
     /* Read the client config */
-    if (OK != decode_client_config(CONFIG_FILE))
+    if (OK != decode_client_config(CONFIG_FILE, get_client_config()))
     {
         debug_log(LOG_CRIT, "Could not read %s. Exiting.", CONFIG_FILE);
         return ERROR;
     }
  
-    /* Change UID and GID */
+    print_client_config();
+
+    /* Change UID and GID and chroot */
+    if (OK != change_user_and_root(get_client_config()->uid))
+    {
+        debug_log(LOG_CRIT, "Could not change uid and root. Exiting.");
+        return ERROR;
+    }
 
     /* Mount the scratchpad directory */
     if (create_scratchpad && (OK != mount_scratchpad(SCRATCHPAD_DIR, 512, getuid(), getgid())))
@@ -120,7 +132,6 @@ main(int argc, char *argv[])
     }
 
     printf("daemonize = %d, create_scratchpad = %d\n", daemonize, create_scratchpad);
-    exit(1);
 
     if (OK != spider_init(daemonize, create_scratchpad))
     {
