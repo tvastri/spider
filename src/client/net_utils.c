@@ -7,6 +7,12 @@
 #include "config_utils.h"
 #include "debug.h"
 
+void
+net_init()
+{
+    curl_global_init(CURL_GLOBAL_ALL);
+}
+
 tBoolean
 hash_present_on_server()
 {
@@ -21,6 +27,66 @@ hash_present_on_server()
     }
 
     return FALSE;
+}
+
+static size_t
+upload_file_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
+{
+    printf("%s called ...size = %lu, nmemb = %lu\n", __FUNCTION__, size, nmemb);
+    return size*nmemb;
+}
+
+tStatus
+upload_file(char *file)
+{
+    CURL *curl;
+    CURLcode res;
+    struct curl_httppost *formpost=NULL;
+    struct curl_httppost *lastptr=NULL;
+    struct curl_slist *headerlist=NULL;
+    static const char buf[] = "Expect: 100-continue";
+
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "uploadfile", CURLFORM_FILE, file, CURLFORM_END);
+
+    curl_formadd(&formpost, &lastptr, CURLFORM_COPYNAME, "submit", CURLFORM_COPYCONTENTS, "upload", CURLFORM_END);
+
+    headerlist = curl_slist_append(headerlist, buf);
+
+    curl = curl_easy_init();
+
+    if (curl)
+    {
+        curl_easy_setopt(curl, CURLOPT_URL, SPIDER_UPLOAD_URL);
+        curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
+        curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, upload_file_write_callback);
+
+        res = curl_easy_perform(curl);
+        if(res != CURLE_OK)
+        {
+            debug_log(LOG_ERR, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
+            goto err;
+        }
+
+    }
+    else
+    {
+        debug_log(LOG_ERR, "curl_easy_init() failed.\n");
+        goto err;
+    }
+
+    curl_easy_cleanup(curl);
+    curl_formfree(formpost);
+    curl_slist_free_all (headerlist);
+
+    return OK;
+
+err:
+    curl_easy_cleanup(curl);
+    curl_formfree(formpost);
+    curl_slist_free_all (headerlist);
+
+    return ERROR;
 }
 
 size_t

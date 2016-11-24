@@ -1,9 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <getopt.h>
 #include <string.h>
 #include <ctype.h>
-#include <sys/types.h>
 #include <unistd.h>
+#include <sys/types.h>
 #include <time.h>
 #include <errno.h>
 #include "global.h"
@@ -14,11 +15,27 @@
 #include "config_utils.h"
 
 
-static void
-spider_init(tBoolean daemonize)
+static tStatus
+spider_init(int daemonize, int create_scratchpad)
 {
 
     config_init();
+
+    /* Read the client config */
+    if (OK != decode_client_config(CONFIG_FILE))
+    {
+        debug_log(LOG_CRIT, "Could not read %s. Exiting.", CONFIG_FILE);
+        return ERROR;
+    }
+ 
+    /* Change UID and GID */
+
+    /* Mount the scratchpad directory */
+    if (create_scratchpad && (OK != mount_scratchpad(SCRATCHPAD_DIR, 512, getuid(), getgid())))
+    {
+        debug_log(LOG_CRIT, "Could not mount SCRATCHPAD_DIR.");
+        return ERROR;
+    }
 
     if (daemonize)
     {
@@ -27,17 +44,19 @@ spider_init(tBoolean daemonize)
 
     debug_log_init(daemonize);
 
+    net_init();
+
     srand(time(NULL));
 
     /* Create timestamp directory if not present */
     if (OK != create_cache_dir_if_missing(CACHE_DIR))
     {
-        debug_log(LOG_CRIT, "Could not create cache directory.");
-        exit(1);
+        return ERROR;
     }
 
     debug_log(LOG_NOTICE, "Starting client.");
 
+    return OK;
 }
 
 static void
@@ -49,45 +68,66 @@ spider_end()
 int
 main(int argc, char *argv[])
 {
-    int                              c;
-    tBoolean           daemonize=FALSE;
-    char                         *root;
-    time_t                         now;
-    //time_t              pscan_interval;
-    time_t             next_fscan_time = 0;
-    //time_t             next_pscan_time = 0;
-    //time_t        last_fscan_timestamp;
-    char           ipaddr[IP_ADDR_LEN] = {0};
+    static int                   daemonize=FALSE;
+    static int           create_scratchpad=FALSE;
+    int                                        c;
+    char                                   *root;
+    time_t                                   now;
+    //time_t                      pscan_interval;
+    time_t                   next_fscan_time = 0;
+    //time_t                 next_pscan_time = 0;
+    //time_t                last_fscan_timestamp;
+    char               ipaddr[IP_ADDR_LEN] = {0};
 
-    while ((c = getopt (argc, argv, "d")) != -1)
+    while(1)
     {
+        static struct option long_options[] =
+        {
+            {"daemonize",          no_argument,               &daemonize, 1},
+            {"create-scratchpad",  no_argument,       &create_scratchpad, 1},
+            {"help",     no_argument,       0, 'h'},
+            {0, 0, 0, 0}
+        };
+
+        int option_index = 0;
+
+        c = getopt_long (argc, argv, "h", long_options, &option_index);
+
+        if (c == -1)
+            break;
+
         switch(c)
         {
-            case 'd':
-                daemonize = TRUE;
-                spider_init(daemonize);
+            case 0:
+                if (long_options[option_index].flag != 0)
+                    break;
+                if (optarg)
+                    printf (" with arg %s", optarg);
+                    printf ("\n");
                 break;
+            case 'h':
+                printf("Print help1\n");
+                break;
+
             case '?':
-                if (optopt == 'c')
-                    debug_log(LOG_CRIT, "Option -%c requires an argument.", optopt);
-                else if (isprint(optopt))
-                    debug_log(LOG_CRIT, "Unknown option `-%c'.", optopt);
-                else
-                    debug_log(LOG_CRIT, "Unknown option character `\\x%x'.", optopt);
-                return 1;
+                break;
+
             default:
+                printf("Print help2\n");
                 exit(1);
         }
+
     }
 
-    spider_init(daemonize);
+    printf("daemonize = %d, create_scratchpad = %d\n", daemonize, create_scratchpad);
+    exit(1);
 
-    if (OK != decode_client_config(CONFIG_FILE))
+    if (OK != spider_init(daemonize, create_scratchpad))
     {
-        debug_log(LOG_CRIT, "Could not read %s. Exiting.", CONFIG_FILE);
+        debug_log(LOG_CRIT, "Initialization failed.");
         exit(1);
     }
- 
+
 
     printf("server ipaddr = %s\n", ipaddr);
 

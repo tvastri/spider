@@ -5,11 +5,36 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <openssl/sha.h>
+#include <string.h>
 #include <errno.h>
+#include <sys/mount.h>
 #include "debug.h"
 #include "file_utils.h"
 
-#define TS_BUF  16
+#define TS_BUF               16
+#define MOUNT_OPTIONS_SIZE  128
+
+tStatus
+mount_scratchpad(char *scratchpad_dir, uint32_t size_mb, uid_t uid, gid_t gid)
+{
+    int result;
+    const char* src  = "none";
+    const char* trgt = "/mnt";
+    const char* type = "tmpfs";
+    const unsigned long mntflags = 0;
+    char opts[MOUNT_OPTIONS_SIZE+1];   /* 65534 is the uid of nobody */
+
+    snprintf(opts, MOUNT_OPTIONS_SIZE, "mode=0700,uid=%u,gid=%u,size=%uM", uid, gid, size_mb);
+
+    result = mount(src, trgt, type, mntflags, opts);
+
+    if (result == 0)
+    {
+        debug_log(LOG_CRIT, "Failed to create tmpfs at %s.", scratchpad_dir);
+        return ERROR;
+    }
+    return OK;
+}
 
 tStatus
 create_cache_dir_if_missing(char *cache_dir)

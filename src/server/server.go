@@ -39,21 +39,25 @@ func get(w http.ResponseWriter, r *http.Request) {
     }
 }
 
-func put(w http.ResponseWriter, r *http.Request) {
+func upld(w http.ResponseWriter, r *http.Request) {
     var ok error
     var arr []byte
     var path string
 
+    fmt.Printf("Hello World upld\n");
 
     r.ParseForm()
 
     if (r.Method == "GET") {
+    fmt.Printf("Hello World GET\n");
         http.Error(w, "Wrong Method", 500)
         return
     } else {
+    fmt.Printf("Hello World POST\n");
         r.ParseMultipartForm(32 << 20)
         file, handler, err := r.FormFile("uploadfile")
         if err != nil {
+    fmt.Printf("Hello World r.FormFile failed\n");
             fmt.Println(err)
             return
         }
@@ -123,7 +127,7 @@ func main() {
     os.Chdir("/disk2/BACKUP")
 
     http.HandleFunc("/get/", get);
-    http.HandleFunc("/put/", put)
+    http.HandleFunc("/upld/", upld)
     http.HandleFunc("/stat/", stat)
     http.HandleFunc("/reg/", reg)
     http.ListenAndServe(":8000", nil)
