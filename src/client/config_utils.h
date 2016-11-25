@@ -23,7 +23,7 @@ typedef struct
 
 void config_init();
 tStatus decode_client_config(char *config_file, tClientConfig *clientConfig);
-tStatus decode_server_config();
+tStatus decode_server_config(tServerConfig *serverConfig);
 
 tClientConfig* get_client_config();
 tServerConfig* get_server_config();

@@ -135,6 +135,13 @@ spider_init(int daemonize, int create_scratchpad)
         return ERROR;
     }
 
+    /* Is scratchpad mounted */
+    if (FALSE == scratchpad_is_tmpfs(SCRATCHPAD_DIR))
+    {
+        debug_log(LOG_CRIT, "Scratchpad dir is not tmpfs.");
+        return ERROR;
+    }
+
     debug_log(LOG_NOTICE, "Starting client.");
 
     return OK;
@@ -210,7 +217,6 @@ main(int argc, char *argv[])
 
     printf("server ipaddr = %s\n", get_client_config()->ipaddr);
 
-    exit(1);
 
     // The main loop
     while(1)

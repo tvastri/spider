@@ -1,9 +1,11 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/types.h>
 #include <sys/stat.h>
-#include <unistd.h>
+#include <sys/statfs.h>
+#include <linux/magic.h>
 #include <openssl/sha.h>
 #include <string.h>
 #include <errno.h>
@@ -13,6 +15,25 @@
 
 #define TS_BUF               16
 #define MOUNT_OPTIONS_SIZE  128
+
+tBoolean
+scratchpad_is_tmpfs(char *scratchpad_dir)
+{
+    struct statfs  fsprop;
+
+    if (statfs(scratchpad_dir, &fsprop) < 0)
+    {
+        debug_log(LOG_CRIT, "scratchpad dir not mounted.");
+        return FALSE;
+    }
+
+    if (TMPFS_MAGIC != fsprop.f_type)
+    {
+        return FALSE;
+    }
+
+    return TRUE;
+}
 
 tStatus
 mount_scratchpad(char *scratchpad_dir, uint32_t size_mb, uid_t uid, gid_t gid)

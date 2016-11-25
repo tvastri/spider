@@ -101,10 +101,20 @@ decode_server_config(tServerConfig *server)
     full_scan_interval=g_key_file_get_string(keyfile,"Scan","full_scan_interval",NULL);
     partial_scan_interval=g_key_file_get_string(keyfile,"Scan","partial_scan_interval",NULL);
 
+    if (full_scan_interval == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode full scan interval");
+        return ERROR;
+    }
+    if (partial_scan_interval == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode partial scan interval");
+        return ERROR;
+    }
+
     server->fscan_interval = atol(full_scan_interval);
     server->pscan_interval = atol(partial_scan_interval);
 
-    printf("%s: %s %s\n", __FUNCTION__, full_scan_interval, partial_scan_interval);
     return OK;
 }
 

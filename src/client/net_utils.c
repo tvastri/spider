@@ -120,6 +120,7 @@ download_config_from_server(tServerConfig *t)
     {
         free(t->scratchpad.data);
         t->scratchpad.data = NULL;
+        t->scratchpad.size = 0;
     }
 
     curl = curl_easy_init();
@@ -137,5 +138,5 @@ download_config_from_server(tServerConfig *t)
         curl_easy_cleanup(curl);
     }
 
-    return decode_server_config();
+    return decode_server_config(t);
 }

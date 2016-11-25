@@ -2,7 +2,7 @@
 #define _GLOBAL_H
 
 #define CACHE_DIR          ".spider"
-#define SCRATCHPAD_DIR     "/etc/spider/scratchpad"
+#define SCRATCHPAD_DIR     ".spider/scratchpad"
 #define TIMESTAMP_FILE     CACHE_DIR "/" "last_timestamp"
 #define CONFIG_FILE        "/etc/spider/client.cfg"
 #define IP_ADDR_LEN        16
