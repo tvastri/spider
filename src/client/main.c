@@ -159,12 +159,12 @@ main(int argc, char *argv[])
     static int                   daemonize=FALSE;
     static int           create_scratchpad=FALSE;
     int                                        c;
-    char                                   *root;
     time_t                                   now;
     //time_t                      pscan_interval;
     time_t                   next_fscan_time = 0;
     //time_t                 next_pscan_time = 0;
     //time_t                last_fscan_timestamp;
+    tFileData            fileData = {NULL, NULL};
 
     while(1)
     {
@@ -230,18 +230,26 @@ main(int argc, char *argv[])
             continue;
         }
 
+        if (OK != file_data_init(&fileData, get_server_config()->max_file_size, get_server_config()->max_path_len))
+        {
+            /* Maybe the server is down */
+            debug_log(LOG_NOTICE, "File data init failed.");
+            continue;
+        }
+
         now = time(&now);
         printf("now = %lu, next_fscan_time = %lu, get_fscan_interval = %lu\n", now, next_fscan_time, get_fscan_interval());
-        exit(1);
+
         if (now > next_fscan_time)
         {
             debug_log(LOG_NOTICE, "Starting full scan.");
-            do_fscan(root);
+            do_scan(SPIDER_FULL_SCAN, &fileData, ".", 0, get_client_config()->backoff_interval);
             debug_log(LOG_NOTICE, "Full scan completed in %u seconds.", time(NULL) - now);
             next_fscan_time = time(NULL) + (get_fscan_interval()/10)*9 + rand()%(get_fscan_interval()/10);
             printf("now = %lu, next_fscan_time = %lu\n", now, next_fscan_time);
             store_last_fscan_timestamp(now);
         }
+        exit(1);
         sleep(600);
 #if 0
         else if (now > next_pscan_time)
@@ -251,7 +259,7 @@ main(int argc, char *argv[])
                 debug_log(LOG_ERR, "Could not read last timestamp. Skipping partial scan.");
                 continue;
             }
-            do_pscan(root, last_fscan_timestamp);
+            do_pscan(SPIDER_PARTIAL_SCAN, &fileData, root, last_fscan_timestamp, get_client_config()->backoff_interval);
             debug_log(LOG_NOTICE, "Partial scan completed in %u seconds.", time(NULL) - now);
             next_pscan_time = time(NULL) + (pscan_interval*9)/10 + rand()%(pscan_interval/10);
         }

@@ -9,6 +9,7 @@
 #include <linux/magic.h>
 #include <errno.h>
 #include "debug.h"
+#include "scan_dir.h"
 
 #define MAX_PATH_LEN 1024
 
@@ -63,7 +64,7 @@ stack_pop(char *path, DIR **ppdir)
 }
 
 tStatus
-do_fscan(char *root_dir)
+do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timestamp, uint32_t backoff_interval)
 {
     DIR            *pdir;
     DIR            *pndir;
@@ -105,7 +106,9 @@ do_fscan(char *root_dir)
     
             if (S_ISREG(fprop.st_mode))
             {
-                printf("%s\n", current_file);
+                strcpy(fScratchpad->name, current_file);
+                backup_file(fScratchpad);
+                usleep(backoff_interval);
             }
             else if (S_ISDIR(fprop.st_mode))
             {
@@ -150,8 +153,3 @@ loop_break:
     return OK;
 }
 
-tStatus
-do_pscan(char *root_dir, time_t last_timestamp)
-{
-    return OK;
-}

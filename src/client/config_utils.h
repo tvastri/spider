@@ -1,6 +1,7 @@
 #ifndef _CONFIG_UTILS_H
 #define _CONFIG_UTILS_H
 
+#include <stdint.h>
 #include "global.h"
 
 typedef struct
@@ -10,8 +11,10 @@ typedef struct
         int      size;
         char    *data;
     } scratchpad;
-    time_t  fscan_interval;
-    time_t  pscan_interval;
+    time_t   fscan_interval;
+    time_t   pscan_interval;
+    uint32_t  max_file_size;
+    uint32_t   max_path_len;
 } tServerConfig;
 
 typedef struct
@@ -19,6 +22,7 @@ typedef struct
     char           ipaddr[IP_ADDR_LEN];
     char             uid[MAX_NAME_LEN];
     char           email[MAX_NAME_LEN];
+    uint32_t          backoff_interval;
 } tClientConfig;
 
 void config_init();

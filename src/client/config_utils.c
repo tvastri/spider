@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/types.h>
 #include <glib-2.0/glib.h>
 #include "global.h"
 #include "debug.h"
@@ -25,6 +26,7 @@ decode_client_config(char *config_file, tClientConfig *client)
     gchar               *lipaddr = NULL;
     gchar                  *luid = NULL;
     gchar                *lemail = NULL;
+    gchar      *backoff_interval = NULL;
 
     memset(&clientConfig, 0, sizeof(clientConfig));
 
@@ -61,9 +63,18 @@ decode_client_config(char *config_file, tClientConfig *client)
         return ERROR;
     }
 
+    backoff_interval=g_key_file_get_string(keyfile,"Scan","backoff_interval",&error);
+
+    if (lemail == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode backoff_interval");
+        return ERROR;
+    }
+
     strcpy(client->ipaddr, lipaddr);
     strcpy(client->uid, luid);
     strcpy(client->email, lemail);
+    client->backoff_interval = atol(backoff_interval);
 
     return OK;
 }
@@ -88,6 +99,8 @@ decode_server_config(tServerConfig *server)
     GError            *error = NULL;
     gchar       *full_scan_interval;
     gchar    *partial_scan_interval;
+    gchar            *max_file_size;
+    gchar             *max_path_len;
 
     keyfile = g_key_file_new ();
     flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
@@ -100,6 +113,8 @@ decode_server_config(tServerConfig *server)
 
     full_scan_interval=g_key_file_get_string(keyfile,"Scan","full_scan_interval",NULL);
     partial_scan_interval=g_key_file_get_string(keyfile,"Scan","partial_scan_interval",NULL);
+    max_file_size=g_key_file_get_string(keyfile,"Scan","max_file_size",NULL);
+    max_path_len=g_key_file_get_string(keyfile,"Scan","max_path_len",NULL);
 
     if (full_scan_interval == NULL)
     {
@@ -111,9 +126,21 @@ decode_server_config(tServerConfig *server)
         debug_log(LOG_CRIT, "Could not decode partial scan interval");
         return ERROR;
     }
+    if (max_file_size == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode max_file_size");
+        return ERROR;
+    }
+    if (max_path_len == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode max_path_len");
+        return ERROR;
+    }
 
     server->fscan_interval = atol(full_scan_interval);
     server->pscan_interval = atol(partial_scan_interval);
+    server->max_file_size = atol(max_file_size);
+    server->max_path_len = atol(max_path_len);
 
     return OK;
 }

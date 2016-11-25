@@ -16,6 +16,26 @@
 #define TS_BUF               16
 #define MOUNT_OPTIONS_SIZE  128
 
+tStatus
+file_data_init(tFileData *fData, uint32_t max_size, uint32_t max_name_len)
+{
+    fData->content = realloc(fData->content, max_size);
+    if (NULL == fData->content)
+    {
+        debug_log(LOG_ERR, "realloc failed for content.");
+        return ERROR;
+    }
+
+    fData->name = realloc(fData->name, max_name_len);
+    if (NULL == fData->name)
+    {
+        debug_log(LOG_ERR, "realloc failed for name.");
+        return ERROR;
+    }
+
+    return OK;
+}
+
 tBoolean
 scratchpad_is_tmpfs(char *scratchpad_dir)
 {
@@ -86,14 +106,12 @@ create_cache_dir_if_missing(char *cache_dir)
 }
 
 tStatus
-calculate_sha1_hash(char *infile)
+calculate_sha1_hash(char *infile, unsigned char *hash)
 {
     tStatus                           ret;
     struct                      stat fbuf;
     unsigned char           *file_content;
     FILE                               *f;
-    unsigned char hash[SHA_DIGEST_LENGTH]; // == 20
-
 
     if (0 > stat(infile, &fbuf))
     {
@@ -162,3 +180,14 @@ get_last_fscan_timestamp(time_t *timestamp)
 
     return OK;
 }
+
+tStatus
+backup_file(tFileData *fileData)
+{
+    /* Calculate SHA1 */
+    //calculate_sha1_hash(fileData->name, fileData->sha1);
+    //printf("%s %s\n", fileData->name, fileData->sha1);
+    printf("%s\n", fileData->name);
+    return OK;
+}
+
