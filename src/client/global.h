@@ -1,13 +1,17 @@
 #ifndef _GLOBAL_H
 #define _GLOBAL_H
 
-#define CACHE_DIR          ".spider"
-#define SCRATCHPAD_DIR     ".spider/scratchpad"
+#define CACHE_DIR          ".spider/"
+#define SCRATCHPAD_DIR     ".spider/scratchpad/"
 #define TIMESTAMP_FILE     CACHE_DIR "/" "last_timestamp"
 #define CONFIG_FILE        "/etc/spider/client.cfg"
 #define IP_ADDR_LEN        16
 #define MAX_NAME_LEN       256
 #define LOOP_INTERVAL      10
+#define MAX_IGNORE_EXTN    16
+#define IGNORE_EXTN_SIZE   16
+
+#define CONFIG_LIST_SEPARATOR ","
 
 #define SPIDER_REG_URL     "http://127.0.0.1:8000/reg/"
 #define SPIDER_STAT_URL    "http://127.0.0.1:8000/stat/"

@@ -3,11 +3,11 @@ RM = rm
 CFLAGS = -g -Wall -Werror -I/usr/include/glib-2.0/ -I/usr/lib64/glib-2.0/include
 LDFLAGS = -lcurl -lssl -lcrypto -lglib-2.0
 
-SOURCES = config_utils.c     \
+SOURCES = config.c           \
           debug.c            \
           file_utils.c       \
-          net_utils.c        \
-          scan_dir.c         \
+          server.c           \
+          scan.c             \
           main.c
 
 OBJECTS = $(SOURCES:.c=.o)

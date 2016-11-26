@@ -2,6 +2,8 @@
 #define _CONFIG_UTILS_H
 
 #include <stdint.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "global.h"
 
 typedef struct
@@ -15,6 +17,7 @@ typedef struct
     time_t   pscan_interval;
     uint32_t  max_file_size;
     uint32_t   max_path_len;
+    char   ignore_extn[MAX_IGNORE_EXTN][IGNORE_EXTN_SIZE];
 } tServerConfig;
 
 typedef struct
@@ -28,6 +31,7 @@ typedef struct
 void config_init();
 tStatus decode_client_config(char *config_file, tClientConfig *clientConfig);
 tStatus decode_server_config(tServerConfig *serverConfig);
+tBoolean backup_worthy(char *file, struct stat *file_stat);
 
 tClientConfig* get_client_config();
 tServerConfig* get_server_config();

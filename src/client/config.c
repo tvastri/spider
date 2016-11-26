@@ -2,10 +2,11 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <glib-2.0/glib.h>
 #include "global.h"
 #include "debug.h"
-#include "config_utils.h"
+#include "config.h"
 
 static tClientConfig clientConfig;
 static tServerConfig serverConfig;
@@ -91,6 +92,51 @@ get_server_config()
     return &serverConfig;
 }
 
+static tBoolean
+check_file_extn(char *file, char *extn)
+{
+    size_t slen = strlen (file);
+    size_t elen = strlen (extn);
+
+    if (slen < elen)
+        return FALSE;
+
+    return (strcmp (&(file[slen-elen]), extn) == 0);
+}
+
+tBoolean
+backup_worthy(char *file, struct stat *file_stat)
+{
+    int i=0;
+
+    while(serverConfig.ignore_extn[i][0])
+    {
+        if (TRUE == check_file_extn(file, &serverConfig.ignore_extn[i][0]))
+            return FALSE;
+        i++;
+    }
+
+    return TRUE;
+}
+
+tStatus
+decode_ignored_extensions(tServerConfig *server, char *ignore_extn)
+{
+    int i=0;
+    char *token;
+
+    token = strtok(ignore_extn, CONFIG_LIST_SEPARATOR);
+
+    while(NULL != token )
+    {
+        strcpy(&server->ignore_extn[i][0], token);
+        i++;
+        token = strtok(NULL, CONFIG_LIST_SEPARATOR);
+    }
+ 
+    return OK;
+}
+
 tStatus
 decode_server_config(tServerConfig *server)
 {
@@ -101,6 +147,7 @@ decode_server_config(tServerConfig *server)
     gchar    *partial_scan_interval;
     gchar            *max_file_size;
     gchar             *max_path_len;
+    gchar              *ignore_extn;
 
     keyfile = g_key_file_new ();
     flags = G_KEY_FILE_KEEP_COMMENTS | G_KEY_FILE_KEEP_TRANSLATIONS;
@@ -115,6 +162,7 @@ decode_server_config(tServerConfig *server)
     partial_scan_interval=g_key_file_get_string(keyfile,"Scan","partial_scan_interval",NULL);
     max_file_size=g_key_file_get_string(keyfile,"Scan","max_file_size",NULL);
     max_path_len=g_key_file_get_string(keyfile,"Scan","max_path_len",NULL);
+    ignore_extn=g_key_file_get_string(keyfile,"Scan","ignore_exensions",NULL);
 
     if (full_scan_interval == NULL)
     {
@@ -136,11 +184,18 @@ decode_server_config(tServerConfig *server)
         debug_log(LOG_CRIT, "Could not decode max_path_len");
         return ERROR;
     }
+    if (ignore_extn == NULL)
+    {
+        debug_log(LOG_CRIT, "Could not decode ignore_extn");
+        return ERROR;
+    }
 
     server->fscan_interval = atol(full_scan_interval);
     server->pscan_interval = atol(partial_scan_interval);
     server->max_file_size = atol(max_file_size);
     server->max_path_len = atol(max_path_len);
+
+    decode_ignored_extensions(server, ignore_extn);
 
     return OK;
 }

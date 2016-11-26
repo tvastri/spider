@@ -90,9 +90,16 @@ func upld(w http.ResponseWriter, r *http.Request) {
 
 func stat(w http.ResponseWriter, r *http.Request) {
     var ok error
+    var arr []byte
+    var path string
 
     r.ParseForm()
-    _,ok = os.Lstat(r.Form.Get("file"))
+
+    arr = []byte(r.Form.Get("file"))
+
+    path = string(arr[0]) + "/" + string(arr[1]) + "/" + string(arr[2]) + "/" + string(arr[3])
+
+    _,ok = os.Lstat(path + "/" + r.Form.Get("file"))
     if (nil == ok) {
         io.WriteString(w, "200 OK")
     } else {

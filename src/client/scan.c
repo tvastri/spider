@@ -9,7 +9,8 @@
 #include <linux/magic.h>
 #include <errno.h>
 #include "debug.h"
-#include "scan_dir.h"
+#include "config.h"
+#include "scan.h"
 
 #define MAX_PATH_LEN 1024
 
@@ -66,6 +67,7 @@ stack_pop(char *path, DIR **ppdir)
 tStatus
 do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timestamp, uint32_t backoff_interval)
 {
+    FILE          *index_fp;
     DIR            *pdir;
     DIR            *pndir;
     struct dirent *entry;
@@ -74,15 +76,22 @@ do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timesta
     char           current_dir[MAX_PATH_LEN] = {0};
     char           current_file[MAX_PATH_LEN] = {0};
 
+    index_fp = fopen(CACHE_DIR "/index.txt", "w");
+    if (NULL == index_fp)
+    {
+        debug_log(LOG_CRIT, "Could not open index file. errno = %s", strerror(errno));
+        return ERROR;
+    }
+
     pdir = opendir(root_dir);
 
     if (NULL == pdir)
     {
-        debug_log(LOG_CRIT, "opendir failed. errno = %s", strerror(errno));
+        debug_log(LOG_CRIT, "opendir of %s failed. errno = %s", root_dir, strerror(errno));
         exit(1);
     }
 
-    stack_push(".", pdir);
+    stack_push(root_dir, pdir);
 
     while((pdir = stack_pop(current_dir, &pdir)))
     {
@@ -106,9 +115,20 @@ do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timesta
     
             if (S_ISREG(fprop.st_mode))
             {
+                if (fprop.st_size > 64*1024*1024)
+                    continue; // Skip large files
+
+                if (FALSE == backup_worthy(current_file, &fprop))
+                {
+                    printf("Ignoring %s\n", current_file);
+                    continue;
+                }
                 strcpy(fScratchpad->name, current_file);
-                backup_file(fScratchpad);
-                usleep(backoff_interval);
+                backup_file(index_fp, fScratchpad);
+                if (backoff_interval)
+                {
+                    usleep(backoff_interval);
+                }
             }
             else if (S_ISDIR(fprop.st_mode))
             {
@@ -150,6 +170,8 @@ loop_break:
     }
 
     closedir(pdir);
+    fclose(index_fp);
+
     return OK;
 }
 

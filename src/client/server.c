@@ -4,7 +4,7 @@
 #include <errno.h>
 #include <curl/curl.h>
 #include "global.h"
-#include "config_utils.h"
+#include "config.h"
 #include "debug.h"
 
 void
@@ -14,14 +14,42 @@ net_init()
 }
 
 tBoolean
-hash_present_on_server()
+file_present_on_server(char *file)
 {
+    long http_code = 0;
     CURL *curl;
-    //CURLcode res;
+    CURLcode res;
+    char stat_url[1024] = {0,};
 
+    strcpy(stat_url, SPIDER_STAT_URL);
+    strcat(stat_url, "?file=");
+    strcat(stat_url, file);
+
+    printf("stat_url = %s\n", stat_url);
     curl = curl_easy_init();
     if (curl)
     {
+        curl_easy_setopt(curl, CURLOPT_PROXY, "");
+        curl_easy_setopt(curl, CURLOPT_URL, stat_url);
+        curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, NULL);
+
+        res = curl_easy_perform(curl);
+        if(res == CURLE_OK)
+        {
+            curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+            if (http_code == 200 && res != CURLE_ABORTED_BY_CALLBACK)
+            {
+                printf("http_code1 = %ld\n", http_code);
+                curl_easy_cleanup(curl);
+                return TRUE;
+            }
+            else
+            {
+                printf("http_code2 = %ld\n", http_code);
+                curl_easy_cleanup(curl);
+                return FALSE;
+            }
+        }
 
         curl_easy_cleanup(curl);
     }
@@ -56,6 +84,7 @@ upload_file(char *file)
 
     if (curl)
     {
+        curl_easy_setopt(curl, CURLOPT_PROXY, "");
         curl_easy_setopt(curl, CURLOPT_URL, SPIDER_UPLOAD_URL);
         curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);

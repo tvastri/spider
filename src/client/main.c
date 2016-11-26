@@ -11,9 +11,9 @@
 #include "global.h"
 #include "debug.h"
 #include "file_utils.h"
-#include "net_utils.h"
-#include "scan_dir.h"
-#include "config_utils.h"
+#include "server.h"
+#include "scan.h"
+#include "config.h"
 
 tStatus
 change_user_and_root(char *uid)
@@ -164,7 +164,7 @@ main(int argc, char *argv[])
     time_t                   next_fscan_time = 0;
     //time_t                 next_pscan_time = 0;
     //time_t                last_fscan_timestamp;
-    tFileData            fileData = {NULL, NULL};
+    tFileData            fileData = {NULL, 0, NULL};
 
     while(1)
     {
@@ -243,7 +243,7 @@ main(int argc, char *argv[])
         if (now > next_fscan_time)
         {
             debug_log(LOG_NOTICE, "Starting full scan.");
-            do_scan(SPIDER_FULL_SCAN, &fileData, ".", 0, get_client_config()->backoff_interval);
+            do_scan(SPIDER_FULL_SCAN, &fileData, "./ws", 0, get_client_config()->backoff_interval);
             debug_log(LOG_NOTICE, "Full scan completed in %u seconds.", time(NULL) - now);
             next_fscan_time = time(NULL) + (get_fscan_interval()/10)*9 + rand()%(get_fscan_interval()/10);
             printf("now = %lu, next_fscan_time = %lu\n", now, next_fscan_time);

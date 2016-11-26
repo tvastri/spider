@@ -12,6 +12,7 @@
 #include <sys/mount.h>
 #include "debug.h"
 #include "file_utils.h"
+#include "server.h"
 
 #define TS_BUF               16
 #define MOUNT_OPTIONS_SIZE  128
@@ -182,12 +183,82 @@ get_last_fscan_timestamp(time_t *timestamp)
 }
 
 tStatus
-backup_file(tFileData *fileData)
+backup_file(FILE *index_fp, tFileData *fileData)
 {
+    FILE *fp;
+    uint32_t res;
+    int i;
+    char scratchpad_file[1024] = {0,};
+
+    fileData->size = 0;
+    memset(fileData->hashname, 0, sizeof(fileData->hashname));
+
+    fp = fopen(fileData->name, "r");
+    if (fp != NULL)
+    {
+        while (!feof(fp))
+        {
+            res = fread(fileData->content+fileData->size, 1, 1024*1024, fp);
+            fileData->size += res;
+        }
+        fclose(fp);
+    }
+    else
+    {
+        return ERROR;
+    }
+
     /* Calculate SHA1 */
-    //calculate_sha1_hash(fileData->name, fileData->sha1);
-    //printf("%s %s\n", fileData->name, fileData->sha1);
-    printf("%s\n", fileData->name);
+    SHA1(fileData->content, fileData->size, fileData->sha1hash);
+
+    for(i=0; i<SHA_DIGEST_LENGTH; i++)
+    {
+        sprintf(&fileData->hashname[2*i], "%.2x", fileData->sha1hash[i]);
+    }
+
+    if (TRUE == file_present_on_server(fileData->hashname))
+    {
+       printf("file %s present on server\n", fileData->hashname);
+       goto finish;
+    }
+
+    // File not present on server. Upload.
+    strcpy(scratchpad_file, SCRATCHPAD_DIR);
+    strcat(scratchpad_file, fileData->hashname);
+
+    // Copy contents to a file on scratchpad
+    printf("scratchpad_file = %s\n", scratchpad_file);
+    fp = fopen(scratchpad_file, "w");
+    if (fp != NULL)
+    {
+        res = fwrite(fileData->content, 1, fileData->size, fp);
+        if (res != fileData->size)
+        {
+            debug_log(LOG_ERR, "fwrite failed. nmemb = %u, res = %u.", fileData->size, res);
+            fclose(fp);
+            return ERROR;
+        }
+        fclose(fp);
+    }
+    else
+    {
+        printf("fopen failed errno = %d\n", errno);
+        return ERROR;
+    }
+
+    printf("Going to upload %s\n", scratchpad_file);
+    if ( OK != upload_file(scratchpad_file))
+    {
+        debug_log(LOG_ERR, "Upload of %s failed.", fileData->name);
+        goto err;
+    }
+    
+finish:
+    fprintf(index_fp, "%s ", fileData->name);
+    fprintf(index_fp, "%s\n", fileData->hashname);
+
+err:
+    remove(scratchpad_file);
     return OK;
 }
 
