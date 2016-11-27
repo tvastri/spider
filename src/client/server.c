@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <unistd.h>
 #include <string.h>
 #include <errno.h>
 #include <curl/curl.h>
@@ -64,8 +65,8 @@ upload_file_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
     return size*nmemb;
 }
 
-tStatus
-upload_file(char *file)
+static tStatus
+upload_file_curl(char *file)
 {
     CURL *curl;
     CURLcode res;
@@ -93,7 +94,6 @@ upload_file(char *file)
         res = curl_easy_perform(curl);
         if(res != CURLE_OK)
         {
-            debug_log(LOG_ERR, "curl_easy_perform() failed: %s\n", curl_easy_strerror(res));
             goto err;
         }
 
@@ -116,6 +116,25 @@ err:
     curl_slist_free_all (headerlist);
 
     return ERROR;
+}
+
+tStatus
+upload_file(char *file)
+{
+    int     backoff=1;
+    tStatus       ret;
+
+    do
+    {
+        ret = upload_file_curl(file);
+        if (OK  != ret)
+        {
+            backoff = (backoff > 4000)?4096:2*backoff;
+            printf("Backing off for %d secs for file %s\n", backoff, file);
+            sleep(backoff);
+        }
+    } while(ret != OK);
+    return OK;
 }
 
 size_t

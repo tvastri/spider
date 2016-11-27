@@ -44,29 +44,22 @@ func upld(w http.ResponseWriter, r *http.Request) {
     var arr []byte
     var path string
 
-    fmt.Printf("Hello World upld\n");
-
     r.ParseForm()
 
     if (r.Method == "GET") {
-    fmt.Printf("Hello World GET\n");
         http.Error(w, "Wrong Method", 500)
         return
     } else {
-    fmt.Printf("Hello World POST\n");
         r.ParseMultipartForm(32 << 20)
         file, handler, err := r.FormFile("uploadfile")
         if err != nil {
-    fmt.Printf("Hello World r.FormFile failed\n");
+            http.Error(w, "Cannot write file.", 500)
             fmt.Println(err)
             return
         }
 
-        fmt.Printf("Filename = %s\n", handler.Filename)
         arr = []byte(handler.Filename)
         path = "./" + string(arr[0]) + "/" + string(arr[1]) + "/" + string(arr[2]) + "/" + string(arr[3]) + "/"
-
-        fmt.Printf("PATH = %s\n", path);
 
         ok = os.MkdirAll(path, 0700)
         if (nil != ok) {
@@ -81,11 +74,9 @@ func upld(w http.ResponseWriter, r *http.Request) {
             fmt.Println(err)
             return
         }
-           defer f.Close()
-           io.Copy(f, file)
+        defer f.Close()
+        io.Copy(f, file)
     }
-  
-
 }
 
 func stat(w http.ResponseWriter, r *http.Request) {
@@ -110,8 +101,6 @@ func stat(w http.ResponseWriter, r *http.Request) {
 
 func reg(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()
-
-    fmt.Printf("Hello World\n");
 
     file, err := os.Open("/etc/spider/server.cfg")
     if (err != nil) {

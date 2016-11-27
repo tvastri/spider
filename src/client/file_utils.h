@@ -12,6 +12,7 @@ typedef struct
     char *name;
     unsigned char sha1hash[SHA_DIGEST_LENGTH];
     char hashname[2*SHA_DIGEST_LENGTH+4+1]; //  hash.spd
+    struct stat *stat;
 } tFileData;
 
 tStatus file_data_init(tFileData *fData, uint32_t max_size, uint32_t max_name_len);

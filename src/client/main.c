@@ -243,7 +243,7 @@ main(int argc, char *argv[])
         if (now > next_fscan_time)
         {
             debug_log(LOG_NOTICE, "Starting full scan.");
-            do_scan(SPIDER_FULL_SCAN, &fileData, "./ws", 0, get_client_config()->backoff_interval);
+            do_scan(SPIDER_FULL_SCAN, &fileData, "./stl", 0, get_client_config()->backoff_interval);
             debug_log(LOG_NOTICE, "Full scan completed in %u seconds.", time(NULL) - now);
             next_fscan_time = time(NULL) + (get_fscan_interval()/10)*9 + rand()%(get_fscan_interval()/10);
             printf("now = %lu, next_fscan_time = %lu\n", now, next_fscan_time);

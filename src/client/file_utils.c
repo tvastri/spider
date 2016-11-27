@@ -255,7 +255,11 @@ backup_file(FILE *index_fp, tFileData *fileData)
     
 finish:
     fprintf(index_fp, "%s ", fileData->name);
-    fprintf(index_fp, "%s\n", fileData->hashname);
+    fprintf(index_fp, "%s ", fileData->hashname);
+    fprintf(index_fp, "0%o ", fileData->stat->st_mode);
+    fprintf(index_fp, "%lu ", fileData->stat->st_atime);
+    fprintf(index_fp, "%lu ", fileData->stat->st_mtime);
+    fprintf(index_fp, "%lu\n", fileData->stat->st_ctime);
 
 err:
     remove(scratchpad_file);

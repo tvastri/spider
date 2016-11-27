@@ -124,6 +124,7 @@ do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timesta
                     continue;
                 }
                 strcpy(fScratchpad->name, current_file);
+                fScratchpad->stat = &fprop;
                 backup_file(index_fp, fScratchpad);
                 if (backoff_interval)
                 {
