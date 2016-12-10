@@ -13,10 +13,14 @@
 
 #define CONFIG_LIST_SEPARATOR ","
 
-#define SPIDER_REG_URL     "http://127.0.0.1:8000/reg/"
-#define SPIDER_STAT_URL    "http://127.0.0.1:8000/stat/"
-#define SPIDER_GET_URL     "http://127.0.0.1:8000/stat/"
-#define SPIDER_UPLOAD_URL  "http://127.0.0.1:8000/upld/"
+#define SPIDER_SERVER_PORT "8500"
+
+/* Server status codes */
+
+#define FILE_PRESENT          100
+#define FILE_NOT_PRESENT      101
+#define FILE_WRITE_FAILED     111
+
 
 typedef u_int8_t tBoolean;
 #if (1 != TRUE)

@@ -227,6 +227,7 @@ main(int argc, char *argv[])
         {
             /* Maybe the server is down */
             debug_log(LOG_NOTICE, "Server config download failed.");
+            sleep(60);
             continue;
         }
 
@@ -234,6 +235,7 @@ main(int argc, char *argv[])
         {
             /* Maybe the server is down */
             debug_log(LOG_NOTICE, "File data init failed.");
+            sleep(60);
             continue;
         }
 
@@ -242,9 +244,11 @@ main(int argc, char *argv[])
 
         if (now > next_fscan_time)
         {
+            tClientStats clientStats;
             debug_log(LOG_NOTICE, "Starting full scan.");
             do_scan(SPIDER_FULL_SCAN, &fileData, "./stl", 0, get_client_config()->backoff_interval);
-            debug_log(LOG_NOTICE, "Full scan completed in %u seconds.", time(NULL) - now);
+            get_client_stats(&clientStats);
+            debug_log(LOG_NOTICE, "Full scan completed in %u seconds. nstat = %u, nupld = %u.", time(NULL) - now, clientStats.nstat, clientStats.nupld);
             next_fscan_time = time(NULL) + (get_fscan_interval()/10)*9 + rand()%(get_fscan_interval()/10);
             printf("now = %lu, next_fscan_time = %lu\n", now, next_fscan_time);
             store_last_fscan_timestamp(now);
