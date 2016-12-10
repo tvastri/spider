@@ -47,7 +47,7 @@ func upld(w http.ResponseWriter, r *http.Request) {
     r.ParseForm()
 
     if (r.Method == "GET") {
-        http.Error(w, "Wrong Method", 500)
+        http.Error(w, "151 Wrong Method", 400)
         return
     } else {
         r.ParseMultipartForm(32 << 20)
@@ -63,7 +63,7 @@ func upld(w http.ResponseWriter, r *http.Request) {
 
         ok = os.MkdirAll(path, 0700)
         if (nil != ok) {
-            http.Error(w, "Directory creation failed", 500)
+            http.Error(w, "113 Directory creation failed", 500)
             return
         }
 
@@ -71,11 +71,12 @@ func upld(w http.ResponseWriter, r *http.Request) {
         fmt.Fprintf(w, "%v", handler.Header)
         f, err := os.OpenFile(path+handler.Filename, os.O_WRONLY|os.O_CREATE, 0666)
         if err != nil {
-            fmt.Println(err)
+            http.Error(w, "115 File open failed", 500)
             return
         }
         defer f.Close()
         io.Copy(f, file)
+        io.WriteString(w, "110 File uploaded")
     }
 }
 

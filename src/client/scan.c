@@ -133,6 +133,9 @@ do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timesta
             }
             else if (S_ISDIR(fprop.st_mode))
             {
+                char nobackup_file[MAX_PATH_LEN];
+                struct stat               nbstat;
+
                 if (statfs(current_file, &fsprop) < 0)
                 {
                     debug_log(LOG_ERR, "statfs failed for %s. errno = %s", current_file, strerror(errno));
@@ -140,6 +143,13 @@ do_scan(eScanType s, tFileData *fScratchpad, char *root_dir, time_t last_timesta
                 }
 
                 if (fsprop.f_type == NFS_SUPER_MAGIC)
+                {
+                    continue;
+                }
+
+                strcpy(nobackup_file, current_file);
+                strcat(nobackup_file, "/.nobackup");
+                if (0 == lstat(nobackup_file, &nbstat))
                 {
                     continue;
                 }

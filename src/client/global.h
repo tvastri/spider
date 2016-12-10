@@ -19,7 +19,11 @@
 
 #define FILE_PRESENT          100
 #define FILE_NOT_PRESENT      101
+#define FILE_UPLOADED         110
 #define FILE_WRITE_FAILED     111
+#define DIR_CREAT_FAILED      113
+#define FILE_OPEN_FAILED      115
+#define WRONG_METHOD          151
 
 
 typedef u_int8_t tBoolean;

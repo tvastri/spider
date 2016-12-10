@@ -169,16 +169,21 @@ file_present_on_server(char *file)
 static size_t
 upload_file_write_callback(char *ptr, size_t size, size_t nmemb, void *userdata)
 {
+    char *buf = (char *)userdata;
+
+    memcpy(buf, ptr, size*nmemb);
     printf("%s called ...size = %lu, nmemb = %lu\n", __FUNCTION__, size, nmemb);
     return size*nmemb;
 }
 
 static tStatus
-upload_file_curl(char *file)
+upload_file_curl(char *file, uint32_t *status)
 {
     CURL *curl;
     CURLcode res;
+    long http_code = 0;
     char  url_buf[1024];
+    char resp_buffer[512] = {0, };
     struct curl_httppost *formpost=NULL;
     struct curl_httppost *lastptr=NULL;
     struct curl_slist *headerlist=NULL;
@@ -199,13 +204,20 @@ upload_file_curl(char *file)
         curl_easy_setopt(curl, CURLOPT_HTTPPOST, formpost);
         curl_easy_setopt(curl, CURLOPT_HTTPHEADER, headerlist);
         curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, upload_file_write_callback);
+        curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)resp_buffer);
 
         res = curl_easy_perform(curl);
-        if(res != CURLE_OK)
+        curl_easy_getinfo (curl, CURLINFO_RESPONSE_CODE, &http_code);
+        if (res == CURLE_OK && http_code == 200)
         {
+            printf("upload http_code = %ld\n", http_code);
+            *status = atoi(resp_buffer);
+        }
+        else
+        {
+            printf("Upload failed. http_code = %ld\n", http_code);
             goto err;
         }
-
     }
     else
     {
@@ -232,10 +244,11 @@ upload_file(char *file)
 {
     int     backoff=1;
     tStatus       ret;
+     uint32_t status;
 
     do
     {
-        ret = upload_file_curl(file);
+        ret = upload_file_curl(file, &status);
         if (OK  != ret)
         {
             backoff = (backoff > 4000)?4096:2*backoff;
