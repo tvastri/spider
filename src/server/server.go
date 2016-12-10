@@ -53,7 +53,7 @@ func upld(w http.ResponseWriter, r *http.Request) {
         r.ParseMultipartForm(32 << 20)
         file, handler, err := r.FormFile("uploadfile")
         if err != nil {
-            http.Error(w, "Cannot write file.", 500)
+            http.Error(w, "111 File write failed", 500)
             fmt.Println(err)
             return
         }
@@ -92,10 +92,9 @@ func stat(w http.ResponseWriter, r *http.Request) {
 
     _,ok = os.Lstat(path + "/" + r.Form.Get("file"))
     if (nil == ok) {
-        io.WriteString(w, "200 OK")
+        io.WriteString(w, "100 lstat succeeded")
     } else {
-        http.Error(w, "Not Found", 404)
-        return
+        io.WriteString(w, "101 lstat failed")
     }
 }
 
@@ -120,12 +119,12 @@ func reg(w http.ResponseWriter, r *http.Request) {
 func main() {
 
     /* Change directory */
-    os.Chdir("/disk2/BACKUP")
+    os.Chdir("/home/backup/SPIDER_BACKUP");
 
     http.HandleFunc("/get/", get);
     http.HandleFunc("/upld/", upld)
     http.HandleFunc("/stat/", stat)
     http.HandleFunc("/reg/", reg)
-    http.ListenAndServe(":8000", nil)
+    http.ListenAndServe(":8500", nil)
 }
 
